@@ -5,12 +5,6 @@ Servo stage3Servo;
 Servo stage2Servo;
 Servo clawServo;
 
-int curr_rotateServo;
-int curr_stage1Servo;
-int curr_stage2Servo;
-int curr_stage3Servo;
-int curr_clawServo;
-
 Servo* servos[5] = {&rotateServo, &stage1Servo, &stage2Servo, &stage3Servo, &clawServo};
 
 void  setup  ()  { 
@@ -33,12 +27,6 @@ void  setup  ()  {
   clawServo.attach(7);
 
   clawServo.write(0);
-
-  curr_rotateServo = 90;
-  curr_stage1Servo = 90;
-  curr_stage2Servo = 90;
-  curr_stage3Servo = 90;
-  curr_clawServo = 0;
 
 } 
 
