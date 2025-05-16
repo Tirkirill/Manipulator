@@ -218,7 +218,7 @@
       <x>390</x>
       <y>10</y>
       <width>261</width>
-      <height>61</height>
+      <height>65</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -233,6 +233,25 @@
       <widget class="QPushButton" name="PlayButton">
        <property name="text">
         <string>Воспроизвести</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>80</y>
+      <width>261</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QPushButton" name="resetButton">
+       <property name="text">
+        <string>Восстановить положение</string>
        </property>
       </widget>
      </item>

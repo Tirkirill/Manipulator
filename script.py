@@ -8,6 +8,9 @@ class ManipulatorInterface(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        self.arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.5) 
+        self.wait_for_arduino_response()
         
         uic.loadUi('design.ui', self)
 
@@ -26,10 +29,20 @@ class ManipulatorInterface(QtWidgets.QMainWindow):
         self.Stage3Slider.setValue(90)
         self.StartButton.clicked.connect(self.start_button_handler)
         self.PlayButton.clicked.connect(self.play_button_handler)
+        self.resetButton.clicked.connect(self.reset_button_handler)
     
     def open_close_slider_handler(self):
         value = self.OpenCloseSlider.value()
         self.send_move_command(value, "4")
+
+    def reset_button_handler(self):
+        self.send_move_command(0, "9")
+        self.LeftRightSlider.setValue(90)
+        self.Stage1Slider.setValue(90)
+        self.Stage2Slider.setValue(90)
+        self.Stage3Slider.setValue(90)
+        self.OpenCloseSlider.setValue(0)
+        self.wait_for_arduino_response()
     
     def stage1_slider_handler(self):
         value = self.Stage1Slider.value()
@@ -61,7 +74,7 @@ class ManipulatorInterface(QtWidgets.QMainWindow):
         self.send_message(message)
 
     def send_message(self, message):
-        arduino.write(bytes(message + "\n", 'utf-8'))
+        self.arduino.write(bytes(message + "\n", 'utf-8'))
 
     def start_button_handler(self):
         if self.is_recoring:
@@ -71,8 +84,6 @@ class ManipulatorInterface(QtWidgets.QMainWindow):
             self.StartButton.setText("Закончить запись")
             self.is_recoring = True
             self.record = []
-
-        print("Запись начата" if self.is_recoring else "Запись остановлена")
     
     def play_button_handler(self): 
 
@@ -80,22 +91,19 @@ class ManipulatorInterface(QtWidgets.QMainWindow):
 
         # Если слишком много записей, отправляем по одной (можно было бы батчами)
         if len(self.record) >= 50:
-            print("По одной")
             for record in self.record:
                 self.send_move_command(int(record[1:]), record[0]) 
                 time.sleep(1)
         else:
-            print("Скопом")
-            arduino.write(bytes("r" + "".join(self.record) + "\n", 'utf-8'))
-            response = self.wait_for_arduino_response(timeout=15)
-            print(response)
+            self.send_message("r" + "".join(self.record))
+            self.wait_for_arduino_response(timeout=15)
 
-    def wait_for_arduino_response(self, timeout=None):
+    def wait_for_arduino_response(self, timeout=10):
         """Ожидает данные от Arduino. Возвращает строку ответа или None, если таймаут истёк."""
         start_time = time.time()
         while True:
-            if arduino.in_waiting > 0:
-                response = arduino.readline().decode('utf-8').strip()
+            if self.arduino.in_waiting > 0:
+                response = self.arduino.readline().decode('utf-8').strip()
                 return response
             if timeout is not None and time.time() - start_time > timeout:
                 return None
@@ -130,5 +138,4 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
-    arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.5) 
     main() 

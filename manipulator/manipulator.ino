@@ -1,4 +1,4 @@
-# include  <Servo.h> // Подключение библиотеки Servo 
+# include  <Servo.h>
 Servo rotateServo;
 Servo stage1Servo;
 Servo stage3Servo;
@@ -13,29 +13,28 @@ void  setup  ()  {
 	Serial.setTimeout(5); 
 
   rotateServo.attach(3);
-  rotateServo.write(90);
-
   stage1Servo.attach(4);
-  stage1Servo.write(90);
-
-  stage3Servo.attach(5);
-  stage3Servo.write(90);
-
-  stage2Servo.attach(6);
-  stage2Servo.write(90);
-
+  stage3Servo.attach(5);  
+  stage2Servo.attach(6);  
   clawServo.attach(7);
 
-  clawServo.write(0);
+  initial_pos();
+
+  Serial.println("!");
 
 } 
 
 void  loop  ()  { 
 
 	while (!Serial.available()); 
-	String x = Serial.readStringUntil('\n');
-  char command = x.charAt(0);
-  String valueStr = x.substring(1);
+	String commandLine = Serial.readStringUntil('\n');
+
+  if (commandLine.length() < 2) {
+    return;
+  }
+
+  char command = commandLine.charAt(0);
+  String valueStr = commandLine.substring(1);
 
   if (command == 'r') {
 
@@ -48,13 +47,27 @@ void  loop  ()  {
     int value = valueStr.substring(1).toInt();
     int servo_key = valueStr.charAt(0) - '0';
 
-    servos[servo_key] -> write(value);
+    if (servo_key == 9) {
+      Serial.println("!");
+      initial_pos();
+      return;
+    }
+
+    if (servo_key >= 0 && servo_key < 5) {
+      servos[servo_key]->write(value);
+    } else {
+      Serial.write('x');
+    }
 
   }
 
 }
 
-// Функция для обработки строки с командами сервоприводов
+/**
+ * @brief Функция для обработки строки с командами сервоприводов при воспроизведении действий
+ *
+ * @param valueStr Строка с командами
+ */
 void processServoCommand(String valueStr) {
 
   if (valueStr.length() % 4 != 0) {
@@ -73,10 +86,34 @@ void processServoCommand(String valueStr) {
   
 }
 
+/**
+ * @brief Исходное положение сервоприводов
+ */
+void initial_pos() {
+
+  moveServoSmoothly("0090");
+  moveServoSmoothly("1090");
+  moveServoSmoothly("2090");
+  moveServoSmoothly("3090");
+  moveServoSmoothly("4000");
+  
+}
+
+/**
+ * @brief Постепенно двигает сервопривод
+ *
+ * @param command строка из 4 символов: команда изменения угла сервопривода
+ */
 void moveServoSmoothly(String command) {
-  if (command.length() < 4) return;
+  if (command.length() != 4) return;
 
   int servo_key = command[0] - '0';
+
+  if (servo_key == 9) {
+    initial_pos();
+    return;
+  }
+
   String angleStr = command.substring(1, 4);
   int targetAngle = angleStr.toInt();
 
